@@ -18,8 +18,8 @@ namespace WepApplicationBarberShop.Controllers
         {
             this._Service = service;
         }
-        [HttpGet("GetClients")]
-        public async Task<ActionResult<PerfilsResponse>> GetClients()
+        [HttpPost("FilterClient")]
+        public async Task<ActionResult<ClientsResponse>> GetClients(FilterClientRequest _request)
         {
             Stopwatch timerProcess = Stopwatch.StartNew();
             Logger.Error($"********* NEW REQUEST *********");
@@ -27,7 +27,7 @@ namespace WepApplicationBarberShop.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var response = await this._Service.getClients();
+                    var response = await this._Service.getClients(_request);
                     timerProcess.Stop();
                     Logger.Error($"RESPONSE Sent, processTime:[" + timerProcess.Elapsed.ToString() + "] Response Service: " + JsonConvert.SerializeObject(response));
                     return Ok(response);

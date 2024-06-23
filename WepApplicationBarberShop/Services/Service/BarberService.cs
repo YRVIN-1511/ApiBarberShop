@@ -1,14 +1,10 @@
 ﻿using AutoMapper;
 using BCP.Framework.Log;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Data;
-using System.Globalization;
 using WepApplicationBarberShop.Models.Common;
 using WepApplicationBarberShop.Models.DTO.Request;
 using WepApplicationBarberShop.Models.DTO.Response;
-using WepApplicationBarberShop.Models.Repository;
 using WepApplicationBarberShop.Repositories.IRepositories;
 
 namespace WepApplicationBarberShop.Services.Service
@@ -17,10 +13,12 @@ namespace WepApplicationBarberShop.Services.Service
     {
         private readonly IMapper _mapper;
         private readonly IBarberRepository _repository;
+        private readonly IConfiguration _configuration;
         public BarberService(IConfiguration configuration, IMapper mapper, IBarberRepository _repository)
         {
             _mapper = mapper;
             this._repository = _repository;
+            _configuration = configuration;
         }
         public async Task<PerfilsResponse> getPerfils()
         {
@@ -93,8 +91,8 @@ namespace WepApplicationBarberShop.Services.Service
                                 id = item.Field<int>("ID"),
                                 lastName = item.Field<string>("LAST_NAME").Trim(),
                                 motherLastName = item.Field<string>("MOTHER_LAST_NAME").Trim(),
-                                names = item.Field<string>("NAMES").Trim()
-                                            ,
+                                names = item.Field<string>("NAMES").Trim(),
+                                image = item.Field<string>("IMAGES") ?? string.Empty,
                                 state = item.Field<string>("STATE").Trim(),
                                 alias = item.Field<string>("ALIAS").Trim()
                             },
@@ -111,13 +109,42 @@ namespace WepApplicationBarberShop.Services.Service
             }
             return _response;
         }
-        public async Task<ClientsResponse> getClients()
+        public async Task<ClientsResponse> getClients(FilterClientRequest _request)
         {
             ClientsResponse _response = null;
             try
             {
-                Logger.Error($"REQUEST Receive [GET CLIENTS]");
-                var responseStatus = await _repository.GetClientsBD();
+                DataTable responseStatus = new();
+                if (_request.typeFilter == "NAMES")
+                {
+                    if (_request.lastName.Trim() == "" && _request.motherLastName.Trim() == "" && _request.names.Trim() == "")
+                        return ClientsResponse.Error("011", "FILTER INVALID - NAMES");
+                    else
+                    {
+                        Logger.Error($"REQUEST Receive [GET CLIENTS BY NAMES]");
+                        responseStatus = await _repository.GetClientsByNamesBD(_request.lastName, _request.motherLastName, _request.names);
+                    }
+                }
+                else if (_request.typeFilter == "EMAIL")
+                {
+                    if (_request.email.Trim() == "")
+                        return ClientsResponse.Error("012", "FILTER INVALID - EMAIL");
+                    else
+                    {
+                        Logger.Error($"REQUEST Receive [GET CLIENTS BY EMAIL]");
+                        responseStatus = await _repository.GetClientsByEmialBD(_request.email);
+                    }
+                }
+                else if (_request.typeFilter == "CELLPHONE")
+                {
+                    if (_request.cellphone.Trim() == "")
+                        return ClientsResponse.Error("013", "FILTER INVALID - CELLPHONE");
+                    else
+                    {
+                        Logger.Error($"REQUEST Receive [GET CLIENTS BY CELPHONE]");
+                        responseStatus = await _repository.GetClientsByCellphoneBD(_request.cellphone);
+                    }
+                }                
                 if (responseStatus.Rows.Count > 0)
                 {
                     List<InformationClient> infoClient = new List<InformationClient>();
@@ -126,6 +153,8 @@ namespace WepApplicationBarberShop.Services.Service
                         {
                             id = item.Field<int>("ID"),
                             names = item.Field<string>("NAMES").Trim(),
+                            lastName = item.Field<string>("LAST_NAME").Trim(),
+                            motherLastName = item.Field<string>("MOTHER_LAST_NAME").Trim(),
                             email = item.Field<string>("EMAIL").Trim(),
                             cellphone = item.Field<string>("CELLPHONE").Trim()                            
                         });
@@ -164,6 +193,8 @@ namespace WepApplicationBarberShop.Services.Service
             try
             {
                 Logger.Error($"[" + _request.trace + "], REQUEST Receive [" + JsonConvert.SerializeObject(_request) + "]");
+                string _route = _configuration.GetValue<string>("dataFileServerConfiguration:pathAttachments");
+                SaveBase64AsFile(_route, _request.barber.image, "IM." + _request.barber.lastName + _request.barber.motherLastName + _request.barber.names + ".jpeg");
                 var responseRegister = await _repository.AddBarberBD(_request.barber.lastName, _request.barber.motherLastName, _request.barber.names, _request.barber.alias, _request.trace);
                 _response = responseRegister == true ? CommonResult.Ok() : CommonResult.Error("150", "BARBER NOT REGISTER");
             }
@@ -174,19 +205,19 @@ namespace WepApplicationBarberShop.Services.Service
             }
             return _response;
         }
-        public async Task<CommonResult> addClientAsync(CreateClientRequest _request)
+        public async Task<CreateClientResponse> addClientAsync(CreateClientRequest _request)
         {
-            CommonResult _response = null;
+            CreateClientResponse _response = new();
             try
             {
                 Logger.Error($"[" + _request.trace + "], REQUEST Receive [" + JsonConvert.SerializeObject(_request) + "]");
                 var responseRegister = await _repository.AddClientBD(_request.lastName.ToUpper().Trim(), _request.motherLastName.ToUpper().Trim(), _request.names.ToUpper().Trim(), _request.email.ToUpper().Trim(), _request.cellphone, _request.trace);
-                _response = responseRegister == true ? CommonResult.Ok() : CommonResult.Error("100", "USER NOT REGISTER");
+                _response = responseRegister.Item1 == true ? CreateClientResponse.Ok(responseRegister.Item2) : CreateClientResponse.Error("100", "USER NOT REGISTER");
             }
             catch (Exception ex)
             {
                 Logger.Error($"[" + _request.trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
-                _response = CommonResult.fatal();
+                _response = CreateClientResponse.fatal();
             }
             return _response;
         }
@@ -343,6 +374,41 @@ namespace WepApplicationBarberShop.Services.Service
                 _response = AvailableTimesBarbersResponse.fatal();
             }
             return _response;
+        }
+        public static bool SaveBase64AsFile(string _route, string _documentStructure, string nameFile)
+        {
+            try
+            {
+                string _routeDocument = Path.Combine(_route, nameFile);
+                if (!Directory.Exists(_route))
+                    Directory.CreateDirectory(_route);
+                if (File.Exists(_routeDocument))
+                    File.Delete(_routeDocument);
+                byte[] _fileDocument = Convert.FromBase64String(_documentStructure);
+                File.WriteAllBytes(_routeDocument, _fileDocument);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+        public static bool DeleteFile(string _routeDocument)
+        {
+            try
+            {
+                if (File.Exists(_routeDocument))
+                {
+                    File.Delete(_routeDocument);
+                    return true;
+                }
+                else
+                    return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

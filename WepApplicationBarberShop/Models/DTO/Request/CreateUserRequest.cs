@@ -12,6 +12,7 @@
         public string? lastName { get; set; } = string.Empty;
         public string? motherLastName { get; set; } = string.Empty;
         public string? names { get; set; } = string.Empty;
+        public string? image { get; set; } = string.Empty;
     }
     public class AuthenticationUser
     {

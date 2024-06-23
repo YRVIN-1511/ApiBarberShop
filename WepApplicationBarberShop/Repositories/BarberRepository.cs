@@ -1,8 +1,11 @@
 ﻿using BCP.Framework.Log;
 using CROSS.DATABASE;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Data;
 using System.Data.SqlClient;
+using WepApplicationBarberShop.Models.DTO.Request;
+using WepApplicationBarberShop.Models.DTO.Response;
 using WepApplicationBarberShop.Repositories.IRepositories;
 
 namespace WepApplicationBarberShop.Repositories
@@ -10,9 +13,11 @@ namespace WepApplicationBarberShop.Repositories
     public class BarberRepository : IBarberRepository
     {
         private readonly IManagerDataBase dataBase;
-        public BarberRepository(IManagerDataBase dataBase)
+        private string _urlBase;
+        public BarberRepository(IManagerDataBase dataBase, string urlBase)
         {
             this.dataBase = dataBase;
+            _urlBase = urlBase;
         }
         public async Task<DataTable> GetPerfilsBD()
         {
@@ -59,14 +64,23 @@ namespace WepApplicationBarberShop.Repositories
             }
             return response;
         }
-        public async Task<DataTable> GetClientsBD()
+        public async Task<DataTable> GetClientsByNamesBD(string lastName, string motherLastName, string names)
         {
-            Logger.Information("GET CLIENTS BD");
+            Logger.Information("GET CLIENTS BD BY NAMES");
             DataTable response = new DataTable();
             try
             {
                 string query = "[dbo].[GetClients]";
-                response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, new List<SqlParameter>());
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@FILTER", "NAMES"),
+                    new SqlParameter("@LASTNAME", lastName),
+                    new SqlParameter("@MOTHERLASTNAME", motherLastName),
+                    new SqlParameter("@NAMES", names),
+                    new SqlParameter("@EMAIL", ""),
+                    new SqlParameter("@CELLPHONE", "")
+                };
+                response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
             }
             catch (Exception ex)
             {
@@ -74,6 +88,55 @@ namespace WepApplicationBarberShop.Repositories
             }
             return response;
         }
+        public async Task<DataTable> GetClientsByEmialBD(string email)
+        {
+            Logger.Information("GET CLIENTS BD");
+            DataTable response = new DataTable();
+            try
+            {
+                string query = "[dbo].[GetClients]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@FILTER", "EMAIL"),
+                    new SqlParameter("@LASTNAME", ""),
+                    new SqlParameter("@MOTHERLASTNAME", ""),
+                    new SqlParameter("@NAMES", ""),
+                    new SqlParameter("@EMAIL", email),
+                    new SqlParameter("@CELLPHONE", "")
+                };
+                response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+        public async Task<DataTable> GetClientsByCellphoneBD(string cellphone)
+        {
+            Logger.Information("GET CLIENTS BD");
+            DataTable response = new DataTable();
+            try
+            {
+                string query = "[dbo].[GetClients]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@FILTER", "CELLPHONE"),
+                    new SqlParameter("@LASTNAME", ""),
+                    new SqlParameter("@MOTHERLASTNAME", ""),
+                    new SqlParameter("@NAMES", ""),
+                    new SqlParameter("@EMAIL", ""),
+                    new SqlParameter("@CELLPHONE", cellphone)
+                };
+                response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+
         public async Task<bool> AddUserBD(int perfil, string paterno, string materno, string nombres
                                           ,string UserLogin, string PasswordLogin, string trace)
         {
@@ -106,6 +169,7 @@ namespace WepApplicationBarberShop.Repositories
         {
             Logger.Information("[" + trace + "], ADD BARBER BD");
             bool response = false;
+            string _image = this._urlBase + "IM." + paterno+ materno + nombres + ".jpeg";
             try
             {
                 string query = "[dbo].[InsertBarber]";
@@ -114,7 +178,8 @@ namespace WepApplicationBarberShop.Repositories
                     new SqlParameter("@LAST_NAME", paterno),
                     new SqlParameter("@MOTHER_LAST_NAME", materno),
                     new SqlParameter("@NAMES", nombres),
-                    new SqlParameter("@ALIAS", alias)                    
+                    new SqlParameter("@ALIAS", alias),
+                    new SqlParameter("@IMAGE", _image),
                 };
                 Logger.Debug("[" + trace + "], REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
                 var data = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
@@ -126,10 +191,9 @@ namespace WepApplicationBarberShop.Repositories
             }
             return response;
         }
-        public async Task<bool> AddClientBD(string lastName, string motherLastName, string names, string email, string cellphone, string trace)
+        public async Task<Tuple<bool, string>> AddClientBD(string lastName, string motherLastName, string names, string email, string cellphone, string trace)
         {
             Logger.Information("[" + trace + "], ADD CLIENT BD");
-            bool response = false;
             try
             {
                 string query = "[dbo].[InsertClient]";
@@ -143,13 +207,14 @@ namespace WepApplicationBarberShop.Repositories
                 };
                 Logger.Debug("[" + trace + "], REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
                 var data = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
-                response = true;
+                string id = data.Rows[0][0].ToString();
+                return Tuple.Create(true, id);
             }
             catch (Exception ex)
             {
                 Logger.Error($"[" + trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
-            }
-            return response;
+                return Tuple.Create(false, "");
+            }            
         }
         public async Task<DataTable> GetTurnsBD()
         {

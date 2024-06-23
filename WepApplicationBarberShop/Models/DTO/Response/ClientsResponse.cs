@@ -36,6 +36,8 @@ namespace WepApplicationBarberShop.Models.DTO.Response
     {
         public int id { get; set; }
         public string names { get; set; } = string.Empty;
+        public string lastName { get; set; } = string.Empty;
+        public string motherLastName { get; set; } = string.Empty;
         public string email { get; set; } = string.Empty;
         public string cellphone { get; set; } = string.Empty;
     }
