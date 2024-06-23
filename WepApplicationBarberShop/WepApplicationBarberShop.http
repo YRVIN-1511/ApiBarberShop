@@ -1,0 +1,6 @@
+@WepApplicationBarberShop_HostAddress = http://localhost:5168
+
+GET {{WepApplicationBarberShop_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
