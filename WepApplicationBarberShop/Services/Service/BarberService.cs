@@ -82,20 +82,17 @@ namespace WepApplicationBarberShop.Services.Service
                 var responseStatus = await _repository.GetBarbersBD();
                 if (responseStatus.Rows.Count > 0)
                 {
-                    List<InformationBarber> infoBarber = new List<InformationBarber>();
+                    List<Barber> infoBarber = new List<Barber>();
                     foreach (DataRow item in responseStatus.Rows)
-                        infoBarber.Add(new InformationBarber
+                        infoBarber.Add(new Barber
                         {
-                            barber = new Barber
-                            {
-                                id = item.Field<int>("ID"),
-                                lastName = item.Field<string>("LAST_NAME").Trim(),
-                                motherLastName = item.Field<string>("MOTHER_LAST_NAME").Trim(),
-                                names = item.Field<string>("NAMES").Trim(),
-                                image = item.Field<string>("IMAGES") ?? string.Empty,
-                                state = item.Field<string>("STATE").Trim(),
-                                alias = item.Field<string>("ALIAS").Trim()
-                            },
+                            id = item.Field<int>("ID"),
+                            lastName = item.Field<string>("LAST_NAME").Trim(),
+                            motherLastName = item.Field<string>("MOTHER_LAST_NAME").Trim(),
+                            names = item.Field<string>("NAMES").Trim(),
+                            image = item.Field<string>("IMAGES") ?? string.Empty,
+                            state = item.Field<string>("STATE").Trim(),
+                            alias = item.Field<string>("ALIAS").Trim()
                         });
                     _response = BarbersResponse.Ok(infoBarber);
                 }

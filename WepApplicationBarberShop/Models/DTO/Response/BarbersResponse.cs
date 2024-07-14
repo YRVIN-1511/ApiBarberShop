@@ -5,14 +5,14 @@ namespace WepApplicationBarberShop.Models.DTO.Response
 {
     public class BarbersResponse:CommonResult
     {
-        public List<InformationBarber> user { get; set; } = new();
-        public static BarbersResponse Ok(List<InformationBarber> data)
+        public List<Barber> barbers { get; set; } = new();
+        public static BarbersResponse Ok(List<Barber> data)
         {
             return new BarbersResponse
             {
                 respCode = "00",
                 detailMessage = "PROCESS COMPLETE",
-                user = data
+                barbers = data
             };
         }
         public static BarbersResponse fatal()
