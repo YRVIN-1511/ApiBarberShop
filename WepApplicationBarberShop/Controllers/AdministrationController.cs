@@ -110,6 +110,29 @@ namespace WepApplicationBarberShop.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
+        [HttpGet("GetBarber/{idBarber}")]
+        public async Task<ActionResult<BarbersResponse>> GetBarbers(string idBarber)
+        {
+            Stopwatch timerProcess = Stopwatch.StartNew();
+            Logger.Error($"********* NEW REQUEST *********");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var response = await this._Service.getBarber(idBarber);
+                    timerProcess.Stop();
+                    Logger.Error($"RESPONSE Sent, processTime:[" + timerProcess.Elapsed.ToString() + "] Response Service: " + JsonConvert.SerializeObject(response));
+                    return Ok(response);
+                }
+                else
+                    return BadRequest(ModelState);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("[API]", $"Se generó un error con el servicio => " + ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
         [HttpPost("CreateBarber")]
         public async Task<ActionResult<PerfilsResponse>> CreateBarber(CreateBarberRequest _request)
         {
@@ -120,6 +143,29 @@ namespace WepApplicationBarberShop.Controllers
                 if (ModelState.IsValid)
                 {
                     var response = await this._Service.addBarberAsync(_request);
+                    timerProcess.Stop();
+                    Logger.Error($"RESPONSE Sent, processTime:[" + timerProcess.Elapsed.ToString() + "] Response Service: " + JsonConvert.SerializeObject(response));
+                    return Ok(response);
+                }
+                else
+                    return BadRequest(ModelState);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("[API]", $"Se generó un error con el servicio => " + ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+        [HttpPost("UpdateBarber")]
+        public async Task<ActionResult<PerfilsResponse>> UpdateBarber(UpdateBarberRequest _request)
+        {
+            Stopwatch timerProcess = Stopwatch.StartNew();
+            Logger.Error($"********* NEW REQUEST *********");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var response = await this._Service.updateBarberAsync(_request);
                     timerProcess.Stop();
                     Logger.Error($"RESPONSE Sent, processTime:[" + timerProcess.Elapsed.ToString() + "] Response Service: " + JsonConvert.SerializeObject(response));
                     return Ok(response);

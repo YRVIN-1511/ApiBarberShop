@@ -64,6 +64,25 @@ namespace WepApplicationBarberShop.Repositories
             }
             return response;
         }
+        public async Task<DataTable> GetBarberBD(string id)
+        {
+            Logger.Information("GET BARBERS BD BY ID");
+            DataTable response = new DataTable();
+            try
+            {
+                string query = "[dbo].[GetBarbersById]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@ID", id)
+                };
+                response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
         public async Task<DataTable> GetClientsByNamesBD(string lastName, string motherLastName, string names)
         {
             Logger.Information("GET CLIENTS BD BY NAMES");
@@ -165,11 +184,12 @@ namespace WepApplicationBarberShop.Repositories
             }
             return response;
         }
-        public async Task<bool> AddBarberBD(string paterno, string materno, string nombres, string alias, string trace)
+        public async Task<Tuple<bool,string>> AddBarberBD(string paterno, string materno, string nombres, string alias, string trace)
         {
             Logger.Information("[" + trace + "], ADD BARBER BD");
             bool response = false;
-            string _image = this._urlBase + "IM." + paterno+ materno + nombres + ".jpeg";
+            string nameImage = string.Empty;
+            string _image = this._urlBase;
             try
             {
                 string query = "[dbo].[InsertBarber]";
@@ -180,6 +200,33 @@ namespace WepApplicationBarberShop.Repositories
                     new SqlParameter("@NAMES", nombres),
                     new SqlParameter("@ALIAS", alias),
                     new SqlParameter("@IMAGE", _image),
+                };
+                Logger.Debug("[" + trace + "], REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
+                var data = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+                nameImage = data.Rows[0][0].ToString();
+                response = true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return Tuple.Create<bool, string>(response, nameImage);
+        }
+        public async Task<bool> UpdateBarberBD(int id, string paterno, string materno, string nombres, string alias, string trace)
+        {
+            Logger.Information("[" + trace + "], UPDATE BARBER BD");
+            bool response = false;
+            string _image = this._urlBase + "IM." + paterno + materno + nombres + ".jpeg";
+            try
+            {
+                string query = "[dbo].[UpdateBarber]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@ID", id),
+                    new SqlParameter("@LAST_NAME", paterno),
+                    new SqlParameter("@MOTHER_LAST_NAME", materno),
+                    new SqlParameter("@NAMES", nombres),
+                    new SqlParameter("@ALIAS", alias)                    
                 };
                 Logger.Debug("[" + trace + "], REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
                 var data = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);

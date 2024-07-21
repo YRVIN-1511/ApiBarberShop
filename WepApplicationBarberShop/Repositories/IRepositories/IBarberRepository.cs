@@ -7,8 +7,10 @@ namespace WepApplicationBarberShop.Repositories.IRepositories
         Task<DataTable> GetPerfilsBD();
         Task<DataTable> GetUsersBD();
         Task<DataTable> GetBarbersBD();
+        Task<DataTable> GetBarberBD(string id);
         Task<bool> AddUserBD(int perfil, string paterno, string materno, string nombres, string UserLogin, string PasswordLogin, string trace);
-        Task<bool> AddBarberBD(string paterno, string materno, string nombres, string alias, string trace);
+        Task<Tuple<bool, string>> AddBarberBD(string paterno, string materno, string nombres, string alias, string trace);
+        Task<bool> UpdateBarberBD(int id, string paterno, string materno, string nombres, string alias, string trace);
         Task<DataTable> GetTurnsBD();
         Task<Tuple<TimeSpan, bool>> AddTurnBD(int interval, TimeSpan hourInit, string trace);
         Task<DataTable> GetClientsByNamesBD(string lastName, string motherLastName, string names);

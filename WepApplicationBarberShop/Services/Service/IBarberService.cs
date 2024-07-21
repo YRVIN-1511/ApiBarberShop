@@ -10,8 +10,10 @@ namespace WepApplicationBarberShop.Services.Service
         Task<PerfilsResponse> getPerfils();
         Task<UsersResponse> getUsers();
         Task<BarbersResponse> getBarbers();
+        Task<BarbersResponse> getBarber(string id);
         Task<CommonResult> addUserAsync(CreateUserRequest _request);
         Task<CommonResult> addBarberAsync(CreateBarberRequest _request);
+        Task<CommonResult> updateBarberAsync(UpdateBarberRequest _request);
         Task<TurnsResponse> getTurns();
         Task<CommonResult> addTurnsAsync(CreateTurnRequest _request);
         Task<ClientsResponse> getClients(FilterClientRequest _request);

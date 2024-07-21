@@ -106,6 +106,39 @@ namespace WepApplicationBarberShop.Services.Service
             }
             return _response;
         }
+        public async Task<BarbersResponse> getBarber(string id)
+        {
+            BarbersResponse _response = null;
+            try
+            {
+                Logger.Error($"REQUEST Receive [GET BARBER] " + id);
+                var responseStatus = await _repository.GetBarberBD(id);
+                if (responseStatus.Rows.Count > 0)
+                {
+                    List<Barber> infoBarber = new List<Barber>();
+                    foreach (DataRow item in responseStatus.Rows)
+                        infoBarber.Add(new Barber
+                        {
+                            id = item.Field<int>("ID"),
+                            lastName = item.Field<string>("LAST_NAME").Trim(),
+                            motherLastName = item.Field<string>("MOTHER_LAST_NAME").Trim(),
+                            names = item.Field<string>("NAMES").Trim(),
+                            image = item.Field<string>("IMAGES") ?? string.Empty,
+                            state = item.Field<string>("STATE").Trim(),
+                            alias = item.Field<string>("ALIAS").Trim()
+                        });
+                    _response = BarbersResponse.Ok(infoBarber);
+                }
+                else
+                    _response = BarbersResponse.Error("001", "DATA NOT FOUND");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = BarbersResponse.fatal();
+            }
+            return _response;
+        }
         public async Task<ClientsResponse> getClients(FilterClientRequest _request)
         {
             ClientsResponse _response = null;
@@ -190,10 +223,35 @@ namespace WepApplicationBarberShop.Services.Service
             try
             {
                 Logger.Error($"[" + _request.trace + "], REQUEST Receive [" + JsonConvert.SerializeObject(_request) + "]");
-                string _route = _configuration.GetValue<string>("dataFileServerConfiguration:pathAttachments");
-                SaveBase64AsFile(_route, _request.barber.image, "IM." + _request.barber.lastName + _request.barber.motherLastName + _request.barber.names + ".jpeg");
                 var responseRegister = await _repository.AddBarberBD(_request.barber.lastName, _request.barber.motherLastName, _request.barber.names, _request.barber.alias, _request.trace);
-                _response = responseRegister == true ? CommonResult.Ok() : CommonResult.Error("150", "BARBER NOT REGISTER");
+                if (responseRegister.Item1)
+                {
+                    string _route = _configuration.GetValue<string>("dataFileServerConfiguration:pathAttachments");
+                    SaveBase64AsFile(_route, _request.barber.image, responseRegister.Item2);
+                } 
+                _response = responseRegister.Item1 == true ? CommonResult.Ok() : CommonResult.Error("150", "BARBER NOT REGISTER");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + _request.trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = CommonResult.fatal();
+            }
+            return _response;
+        }
+        public async Task<CommonResult> updateBarberAsync(UpdateBarberRequest _request)
+        {
+            CommonResult _response = null;
+            try
+            {
+                Logger.Error($"[" + _request.trace + "], REQUEST Receive [" + JsonConvert.SerializeObject(_request) + "]");
+                var responseRegister = await _repository.UpdateBarberBD(_request.barber.id, _request.barber.lastName, _request.barber.motherLastName, _request.barber.names, _request.barber.alias, _request.trace);
+                if (responseRegister)
+                {
+                    string _route = _configuration.GetValue<string>("dataFileServerConfiguration:pathAttachments");
+                    DeleteFile(_route, "IM-" + _request.barber.id + ".jpeg");
+                    SaveBase64AsFile(_route, _request.barber.image, "IM-" + _request.barber.id + ".jpeg");
+                }
+                _response = responseRegister == true ? CommonResult.Ok() : CommonResult.Error("151", "BARBER NOT UPDATE");                
             }
             catch (Exception ex)
             {
@@ -390,10 +448,11 @@ namespace WepApplicationBarberShop.Services.Service
                 return false;
             }
         }
-        public static bool DeleteFile(string _routeDocument)
+        public static bool DeleteFile(string _route, string nameFile)
         {
             try
             {
+                string _routeDocument = Path.Combine(_route, nameFile);
                 if (File.Exists(_routeDocument))
                 {
                     File.Delete(_routeDocument);
