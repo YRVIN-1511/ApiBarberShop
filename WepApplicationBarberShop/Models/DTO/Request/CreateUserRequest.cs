@@ -7,6 +7,14 @@
         public DataBasicUser? user { get; set; } = new DataBasicUser();
         public AuthenticationUser? loginUser { get; set; } = new AuthenticationUser();
     }
+    public class UpdateUserRequest
+    {
+        public string? trace { get; set; } = string.Empty;
+        public int idPerfil { get; set; } = 0;
+        public int idUser { get; set; } = 0;
+        public DataBasicUser? dataBasic { get; set; } = new DataBasicUser();
+        public bool resetPass { get; set; } = false;
+    }
     public class DataBasicUser
     {
         public string? lastName { get; set; } = string.Empty;

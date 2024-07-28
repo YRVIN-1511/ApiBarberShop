@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using WepApplicationBarberShop.Models.DTO.Request;
 
 namespace WepApplicationBarberShop.Repositories.IRepositories
 {
@@ -6,9 +7,13 @@ namespace WepApplicationBarberShop.Repositories.IRepositories
     {
         Task<DataTable> GetPerfilsBD();
         Task<DataTable> GetUsersBD();
+        Task<DataTable> GetUserBD(string id);
+        Task<bool> DeleteUserBD(string id);
         Task<DataTable> GetBarbersBD();
         Task<DataTable> GetBarberBD(string id);
+        Task<bool> DeleteBarberBD(string id);
         Task<bool> AddUserBD(int perfil, string paterno, string materno, string nombres, string UserLogin, string PasswordLogin, string trace);
+        Task<bool> UpdateUserBD(UpdateUserRequest dataUser);
         Task<Tuple<bool, string>> AddBarberBD(string paterno, string materno, string nombres, string alias, string trace);
         Task<bool> UpdateBarberBD(int id, string paterno, string materno, string nombres, string alias, string trace);
         Task<DataTable> GetTurnsBD();

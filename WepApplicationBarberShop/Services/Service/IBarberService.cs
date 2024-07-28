@@ -9,9 +9,13 @@ namespace WepApplicationBarberShop.Services.Service
     {
         Task<PerfilsResponse> getPerfils();
         Task<UsersResponse> getUsers();
+        Task<UsersResponse> getUser(string idUser);
+        Task<CommonResult> deleteUser(string idUser);
         Task<BarbersResponse> getBarbers();
         Task<BarbersResponse> getBarber(string id);
+        Task<CommonResult> deleteBarber(string idBarber);
         Task<CommonResult> addUserAsync(CreateUserRequest _request);
+        Task<CommonResult> updateUserAsync(UpdateUserRequest _request);
         Task<CommonResult> addBarberAsync(CreateBarberRequest _request);
         Task<CommonResult> updateBarberAsync(UpdateBarberRequest _request);
         Task<TurnsResponse> getTurns();

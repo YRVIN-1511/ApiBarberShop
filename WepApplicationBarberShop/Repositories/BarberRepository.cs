@@ -49,6 +49,44 @@ namespace WepApplicationBarberShop.Repositories
             }
             return response;
         }
+        public async Task<DataTable> GetUserBD(string id)
+        {
+            Logger.Information("GET USERS BD");
+            DataTable response = new DataTable();
+            try
+            {
+                string query = "[dbo].[GetUsersById]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@ID", id)
+                };
+                response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+        public async Task<bool> DeleteUserBD(string id)
+        {
+            Logger.Information("DELETE USER BD");
+            bool response = false;
+            try
+            {
+                string query = "[dbo].[DeleteUsersById]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@ID", id)
+                };
+                response = await this.dataBase.ExecuteStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
         public async Task<DataTable> GetBarbersBD()
         {
             Logger.Information("GET BARBERS BD");
@@ -76,6 +114,25 @@ namespace WepApplicationBarberShop.Repositories
                     new SqlParameter("@ID", id)
                 };
                 response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+        public async Task<bool> DeleteBarberBD(string id)
+        {
+            Logger.Information("DELETE BARBER BD");
+            bool response = false;
+            try
+            {
+                string query = "[dbo].[DeleteBarberById]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@ID", id)
+                };
+                response = await this.dataBase.ExecuteStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
             }
             catch (Exception ex)
             {
@@ -181,6 +238,32 @@ namespace WepApplicationBarberShop.Repositories
             catch (Exception ex)
             {
                 Logger.Error($"[" + trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+        public async Task<bool> UpdateUserBD(UpdateUserRequest dataUser)
+        {
+            Logger.Information("[" + dataUser.trace + "], ADD USER BD");
+            bool response = false;
+            try
+            {
+                string query = "[dbo].[UpdateUser]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@ID", dataUser.idUser),
+                    new SqlParameter("@ID_PERFIL", dataUser.idPerfil),
+                    new SqlParameter("@LAST_NAME", dataUser.dataBasic.lastName),
+                    new SqlParameter("@MOTHER_LAST_NAME", dataUser.dataBasic.motherLastName),
+                    new SqlParameter("@NAMES", dataUser.dataBasic.names),
+                    new SqlParameter("@RESET_PASS", dataUser.resetPass)
+                };
+                Logger.Debug("[" + dataUser.trace + "], REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
+                var data = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+                response = true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + dataUser.trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
             }
             return response;
         }

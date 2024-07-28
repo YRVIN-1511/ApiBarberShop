@@ -63,6 +63,52 @@ namespace WepApplicationBarberShop.Controllers
                 ModelState.AddModelError("[API]", $"Se generó un error con el servicio => " + ex.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
+        }        
+        [HttpGet("GetUser/{idUser}")]
+        public async Task<ActionResult<UsersResponse>> GetUser(string idUser)
+        {
+            Stopwatch timerProcess = Stopwatch.StartNew();
+            Logger.Error($"********* NEW REQUEST *********");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var response = await this._Service.getUser(idUser);
+                    timerProcess.Stop();
+                    Logger.Error($"RESPONSE Sent, processTime:[" + timerProcess.Elapsed.ToString() + "] Response Service: " + JsonConvert.SerializeObject(response));
+                    return Ok(response);
+                }
+                else
+                    return BadRequest(ModelState);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("[API]", $"Se generó un error con el servicio => " + ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+        [HttpGet("DeleteUser/{idUser}")]
+        public async Task<ActionResult<CommonResult>> DeleteUser(string idUser)
+        {
+            Stopwatch timerProcess = Stopwatch.StartNew();
+            Logger.Error($"********* NEW REQUEST *********");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var response = await this._Service.deleteUser(idUser);
+                    timerProcess.Stop();
+                    Logger.Error($"RESPONSE Sent, processTime:[" + timerProcess.Elapsed.ToString() + "] Response Service: " + JsonConvert.SerializeObject(response));
+                    return Ok(response);
+                }
+                else
+                    return BadRequest(ModelState);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("[API]", $"Se generó un error con el servicio => " + ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
         [HttpPost("CreateUser")]
         public async Task<ActionResult<PerfilsResponse>> CreateUser(CreateUserRequest _request)
@@ -87,6 +133,30 @@ namespace WepApplicationBarberShop.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
+        [HttpPost("UpdateUser")]
+        public async Task<ActionResult<PerfilsResponse>> UpdateUser(UpdateUserRequest _request)
+        {
+            Stopwatch timerProcess = Stopwatch.StartNew();
+            Logger.Error($"********* NEW REQUEST *********");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var response = await this._Service.updateUserAsync(_request);
+                    timerProcess.Stop();
+                    Logger.Error($"RESPONSE Sent, processTime:[" + timerProcess.Elapsed.ToString() + "] Response Service: " + JsonConvert.SerializeObject(response));
+                    return Ok(response);
+                }
+                else
+                    return BadRequest(ModelState);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("[API]", $"Se generó un error con el servicio => " + ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
         [HttpGet("GetBarbers")]
         public async Task<ActionResult<BarbersResponse>> GetBarbers()
         {
@@ -120,6 +190,29 @@ namespace WepApplicationBarberShop.Controllers
                 if (ModelState.IsValid)
                 {
                     var response = await this._Service.getBarber(idBarber);
+                    timerProcess.Stop();
+                    Logger.Error($"RESPONSE Sent, processTime:[" + timerProcess.Elapsed.ToString() + "] Response Service: " + JsonConvert.SerializeObject(response));
+                    return Ok(response);
+                }
+                else
+                    return BadRequest(ModelState);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("[API]", $"Se generó un error con el servicio => " + ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+        [HttpGet("DeleteBarber/{idBarber}")]
+        public async Task<ActionResult<CommonResult>> DeleteBarbers(string idBarber)
+        {
+            Stopwatch timerProcess = Stopwatch.StartNew();
+            Logger.Error($"********* NEW REQUEST *********");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var response = await this._Service.deleteBarber(idBarber);
                     timerProcess.Stop();
                     Logger.Error($"RESPONSE Sent, processTime:[" + timerProcess.Elapsed.ToString() + "] Response Service: " + JsonConvert.SerializeObject(response));
                     return Ok(response);

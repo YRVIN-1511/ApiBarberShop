@@ -58,13 +58,66 @@ namespace WepApplicationBarberShop.Services.Service
                         infoUser.Add(new InformationUser {
                             perfil = new Perfil { id = item.Field<int>("ID_PERFIL"), perfil = item.Field<string>("PERFIL").Trim() },
                             information = new User { id  = item.Field<int>("ID_PERFIL"), lastName = item.Field<string>("LAST_NAME").Trim(), motherLastName = item.Field<string>("MOTHER_LAST_NAME").Trim(), names = item.Field<string>("NAMES").Trim()
-                                            , state = item.Field<string>("STATE").Trim(), dateCreated = item.Field<DateTime>("DATE_CREATED")},
+                                            , state = item.Field<string>("STATE").Trim(), dateCreated = item.Field<string>("DATE_CREATED")},
                             loginInfo = new AuthenticationUser { userName = item.Field<string>("USER_A").Trim(), passwordName = item.Field<string>("PASSWORD_A").Trim()}
                         });                            
                     _response = UsersResponse.Ok(infoUser);
                 }
                 else
                     _response = UsersResponse.Error("001", "DATA NOT FOUND");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = UsersResponse.fatal();
+            }
+            return _response;
+        }
+        public async Task<UsersResponse> getUser(string idUser)
+        {
+            UsersResponse _response = null;
+            try
+            {
+                Logger.Error($"REQUEST Receive [GET USERS BY ID]");
+                var responseStatus = await _repository.GetUserBD(idUser);
+                if (responseStatus.Rows.Count > 0)
+                {
+                    List<InformationUser> infoUser = new List<InformationUser>();
+                    foreach (DataRow item in responseStatus.Rows)
+                        infoUser.Add(new InformationUser
+                        {
+                            perfil = new Perfil { id = item.Field<int>("ID_PERFIL"), perfil = item.Field<string>("PERFIL").Trim() },
+                            information = new User
+                            {
+                                id = item.Field<int>("ID_PERFIL"),
+                                lastName = item.Field<string>("LAST_NAME").Trim(),
+                                motherLastName = item.Field<string>("MOTHER_LAST_NAME").Trim(),
+                                names = item.Field<string>("NAMES").Trim()
+                                            ,
+                                state = item.Field<string>("STATE").Trim(),
+                                dateCreated = item.Field<string>("DATE_CREATED")
+                            },
+                            loginInfo = new AuthenticationUser { userName = item.Field<string>("USER_A").Trim(), passwordName = item.Field<string>("PASSWORD_A").Trim() }
+                        });
+                    _response = UsersResponse.Ok(infoUser);
+                }
+                else
+                    _response = UsersResponse.Error("001", "DATA NOT FOUND");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = UsersResponse.fatal();
+            }
+            return _response;
+        }
+        public async Task<CommonResult> deleteUser(string idUser)
+        {
+            CommonResult _response = null;
+            try
+            {
+                Logger.Error($"REQUEST Receive [DELETE USER BY ID]");
+                _response = await _repository.DeleteUserBD(idUser) == true ? CommonResult.Ok() : CommonResult.Error("100", "USER NOT DELETED");
             }
             catch (Exception ex)
             {
@@ -103,6 +156,21 @@ namespace WepApplicationBarberShop.Services.Service
             {
                 Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
                 _response = BarbersResponse.fatal();
+            }
+            return _response;
+        }
+        public async Task<CommonResult> deleteBarber(string idBarber)
+        {
+            CommonResult _response = null;
+            try
+            {
+                Logger.Error($"REQUEST Receive [DELETE USER BY ID]");
+                _response = await _repository.DeleteBarberBD(idBarber) == true ? CommonResult.Ok() : CommonResult.Error("100", "USER NOT DELETED");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = UsersResponse.fatal();
             }
             return _response;
         }
@@ -208,6 +276,22 @@ namespace WepApplicationBarberShop.Services.Service
                 Logger.Error($"[" + _request.trace + "], REQUEST Receive [" + JsonConvert.SerializeObject(_request) + "]");
                 var responseRegister = await _repository.AddUserBD(_request.idPerfil, _request.user.lastName, _request.user.motherLastName, _request.user.names
                                                                     , _request.loginUser.userName, _request.loginUser.passwordName, _request.trace);
+                _response = responseRegister == true ? CommonResult.Ok() : CommonResult.Error("100", "USER NOT REGISTER");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + _request.trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = CommonResult.fatal();
+            }
+            return _response;
+        }
+        public async Task<CommonResult> updateUserAsync(UpdateUserRequest _request)
+        {
+            CommonResult _response = null;
+            try
+            {
+                Logger.Error($"[" + _request.trace + "], REQUEST Receive [" + JsonConvert.SerializeObject(_request) + "]");
+                var responseRegister = await _repository.UpdateUserBD(_request);
                 _response = responseRegister == true ? CommonResult.Ok() : CommonResult.Error("100", "USER NOT REGISTER");
             }
             catch (Exception ex)

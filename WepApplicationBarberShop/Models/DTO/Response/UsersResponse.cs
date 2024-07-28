@@ -42,6 +42,6 @@ namespace WepApplicationBarberShop.Models.DTO.Response
     {
         public int id { get; set; }
         public string state { get; set; } = string.Empty;
-        public DateTime dateCreated { get; set; }
+        public string dateCreated { get; set; } = string.Empty;
     }
 }
