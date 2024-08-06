@@ -57,7 +57,7 @@ namespace WepApplicationBarberShop.Services.Service
                     foreach (DataRow item in responseStatus.Rows)
                         infoUser.Add(new InformationUser {
                             perfil = new Perfil { id = item.Field<int>("ID_PERFIL"), perfil = item.Field<string>("PERFIL").Trim() },
-                            information = new User { id  = item.Field<int>("ID_PERFIL"), lastName = item.Field<string>("LAST_NAME").Trim(), motherLastName = item.Field<string>("MOTHER_LAST_NAME").Trim(), names = item.Field<string>("NAMES").Trim()
+                            information = new User { id  = item.Field<int>("ID"), lastName = item.Field<string>("LAST_NAME").Trim(), motherLastName = item.Field<string>("MOTHER_LAST_NAME").Trim(), names = item.Field<string>("NAMES").Trim()
                                             , state = item.Field<string>("STATE").Trim(), dateCreated = item.Field<string>("DATE_CREATED")},
                             loginInfo = new AuthenticationUser { userName = item.Field<string>("USER_A").Trim(), passwordName = item.Field<string>("PASSWORD_A").Trim()}
                         });                            
@@ -89,7 +89,7 @@ namespace WepApplicationBarberShop.Services.Service
                             perfil = new Perfil { id = item.Field<int>("ID_PERFIL"), perfil = item.Field<string>("PERFIL").Trim() },
                             information = new User
                             {
-                                id = item.Field<int>("ID_PERFIL"),
+                                id = item.Field<int>("ID"),
                                 lastName = item.Field<string>("LAST_NAME").Trim(),
                                 motherLastName = item.Field<string>("MOTHER_LAST_NAME").Trim(),
                                 names = item.Field<string>("NAMES").Trim()
