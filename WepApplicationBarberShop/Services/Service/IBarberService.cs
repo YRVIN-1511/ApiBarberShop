@@ -23,9 +23,11 @@ namespace WepApplicationBarberShop.Services.Service
         Task<ClientsResponse> getClients(FilterClientRequest _request);
         Task<CreateClientResponse> addClientAsync(CreateClientRequest _request);
         Task<CommonResult> addRelationBarberTurnAsync(CreateRelationBarberTurnRequest _request);
-        Task<CommonResult> addReservationAsync(ReservationRequest _request);
+        Task<ReservationResponse> addReservationAsync(ReservationRequest _request);
+        Task<InformationReservationResponse> GetInformationReservation(string id);
         Task<AvailableTimesBarberResponse> GetAvailableTimesByIdBarber(AvailableTimesBarberRequest _request);
         Task<AvailableTimesBarbersResponse> GetAvailableTimesBarbers(bool available);
+        Task<ServicesResponse> getServices();
     }
 }
 

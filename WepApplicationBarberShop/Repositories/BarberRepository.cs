@@ -34,6 +34,21 @@ namespace WepApplicationBarberShop.Repositories
             }
             return response;
         }
+        public async Task<DataTable> GetServicesBarberBD()
+        {
+            Logger.Information("GET SERVICES BD");
+            DataTable response = new DataTable();
+            try
+            {
+                string query = "[dbo].[GetServices]";
+                response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, new List<SqlParameter>());
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
         public async Task<DataTable> GetUsersBD()
         {
             Logger.Information("GET USERS BD");
@@ -409,10 +424,10 @@ namespace WepApplicationBarberShop.Repositories
             }
             return response;
         }
-        public async Task<bool> AddReservationBarberBD(int client, int relationTurnBarber, string trace)
+        public async Task<Tuple<bool,string>> AddReservationBarberBD(int client, int relationTurnBarber, string trace)
         {
             Logger.Information("[" + trace + "], ADD RESERVATION BD");
-            bool response = false;
+            Tuple<bool,string> response = Tuple.Create<bool, string>(false,"");
             try
             {
                 string query = "[dbo].[InsertReservation]";
@@ -423,7 +438,8 @@ namespace WepApplicationBarberShop.Repositories
                 };
                 Logger.Debug("[" + trace + "], REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
                 var data = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
-                response = true;
+                if (data.Rows.Count > 0)
+                    response = Tuple.Create<bool,string>(true, data.Rows[0]["ID"].ToString());
             }
             catch (Exception ex)
             {
@@ -449,6 +465,26 @@ namespace WepApplicationBarberShop.Repositories
             catch (Exception ex)
             {
                 Logger.Error($"[" + trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+        public async Task<DataTable> GetInformationReservationBD(string id)
+        {
+            Logger.Information("GET AVAILABLE TIME BY BARBER BD");
+            DataTable response = new();
+            try
+            {
+                string query = "[dbo].[GetDataByReservation]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@ID_RESERVATION", id)
+                };
+                Logger.Debug("REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
+                response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
             }
             return response;
         }

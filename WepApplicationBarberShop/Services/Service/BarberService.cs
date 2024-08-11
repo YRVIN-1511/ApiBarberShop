@@ -77,7 +77,7 @@ namespace WepApplicationBarberShop.Services.Service
         {
             UsersResponse _response = null;
             try
-            {
+            {                
                 Logger.Error($"REQUEST Receive [GET USERS BY ID]");
                 var responseStatus = await _repository.GetUserBD(idUser);
                 if (responseStatus.Rows.Count > 0)
@@ -439,19 +439,19 @@ namespace WepApplicationBarberShop.Services.Service
             }
             return _response;
         }
-        public async Task<CommonResult> addReservationAsync(ReservationRequest _request)
+        public async Task<ReservationResponse> addReservationAsync(ReservationRequest _request)
         {
-            CommonResult _response = null;
+            ReservationResponse _response = null;
             try
             {
                 Logger.Error($"[" + _request.trace + "], REQUEST Receive [" + JsonConvert.SerializeObject(_request) + "]");
                 var _responseInsert = await _repository.AddReservationBarberBD(_request.idClient, _request.idRelationBarberTurn, _request.trace);
-                if( _responseInsert) _response = CommonResult.Ok(); else _response = CommonResult.Error("103", "RESERVATION NOT REGISTER");
+                if( _responseInsert.Item1) _response = ReservationResponse.Ok("RV-" + _responseInsert.Item2); else _response = ReservationResponse.Error("103", "RESERVATION NOT REGISTER");
             }
             catch (Exception ex)
             {
                 Logger.Error($"[" + _request.trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
-                _response = CommonResult.fatal();
+                _response = ReservationResponse.fatal();
             }
             return _response;
         }
@@ -481,6 +481,42 @@ namespace WepApplicationBarberShop.Services.Service
             {
                 Logger.Error($"[" + _request.trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
                 _response = AvailableTimesBarberResponse.fatal();
+            }
+            return _response;
+        }
+        public async Task<InformationReservationResponse> GetInformationReservation(string id)
+        {
+            InformationReservationResponse _response = null;
+            try
+            {                
+                Logger.Error($"REQUEST id Receive [" + id + "]");
+                id = id.Replace("RV-", "");
+                var _responseBD = await _repository.GetInformationReservationBD(id);
+                if (_responseBD.Rows.Count > 0)
+                {
+                    foreach (DataRow item in _responseBD.Rows)
+                    {                        
+                        Information _data = new() { 
+                            id = item.Field<int>("ID"),
+                            lastName = item.Field<string>("LAST_NAME").Trim(),
+                            motherLastName = item.Field<string>("MOTHER_LAST_NAME").Trim(),
+                            names = item.Field<string>("NAMES").Trim(),
+                            email = item.Field<string>("EMAIL").Trim(),
+                            cellphone = item.Field<string>("CELLPHONE").Trim(),
+                            idBarber = item.Field<int>("ID_BARBER"),
+                            aliasBarber = item.Field<string>("BARBER").Trim(),
+                            dateReservation = item.Field<string>("DATE_RESERVATION").Trim()
+                        };
+                        _response = InformationReservationResponse.Ok(_data);
+                    }
+                }
+                else
+                    _response = InformationReservationResponse.Error("001", "DATA NOT FOUND");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = InformationReservationResponse.fatal();
             }
             return _response;
         }
@@ -549,6 +585,30 @@ namespace WepApplicationBarberShop.Services.Service
             {
                 return false;
             }
+        }
+        public async Task<ServicesResponse> getServices()
+        {
+            ServicesResponse _response = null;
+            try
+            {
+                Logger.Error($"REQUEST Receive [GET SERVICES]");
+                var responseStatus = await _repository.GetServicesBarberBD();
+                if (responseStatus.Rows.Count > 0)
+                {
+                    List<serviceBarber> perfils = new ();
+                    foreach (DataRow item in responseStatus.Rows)
+                        perfils.Add(new serviceBarber { id = item.Field<int>("ID"), description = item.Field<string>("DESCRIPTION").Trim(), price= item.Field<decimal>("PRICE") });
+                    _response = ServicesResponse.Ok(perfils);
+                }
+                else
+                    _response = ServicesResponse.Error("001", "DATA NOT FOUND");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = ServicesResponse.fatal();
+            }
+            return _response;
         }
     }
 }

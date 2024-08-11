@@ -6,6 +6,7 @@ namespace WepApplicationBarberShop.Repositories.IRepositories
     public interface IBarberRepository
     {
         Task<DataTable> GetPerfilsBD();
+        Task<DataTable> GetServicesBarberBD();
         Task<DataTable> GetUsersBD();
         Task<DataTable> GetUserBD(string id);
         Task<bool> DeleteUserBD(string id);
@@ -23,8 +24,9 @@ namespace WepApplicationBarberShop.Repositories.IRepositories
         Task<DataTable> GetClientsByCellphoneBD(string cellphone);
         Task<Tuple<bool, string>> AddClientBD(string lastName, string motherLastName, string names, string email, string cellphone, string trace);
         Task<bool> AddRelationBarberTurnBD(int barber, int turn, string date, string trace);
-        Task<bool> AddReservationBarberBD(int client, int relationTurnBarber, string trace);
+        Task<Tuple<bool, string>> AddReservationBarberBD(int client, int relationTurnBarber, string trace);
         Task<DataTable> GetAvailableTimesByBarberBD(int barber, string date, string trace);
+        Task<DataTable> GetInformationReservationBD(string id);
         Task<DataTable> GetAvailableOrNotAvailableTimesBarbersBD(bool avaialable);
     }
 }

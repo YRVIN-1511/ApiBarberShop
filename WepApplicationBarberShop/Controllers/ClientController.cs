@@ -42,7 +42,7 @@ namespace WepApplicationBarberShop.Controllers
             }
         }
         [HttpPost("CreateClient")]
-        public async Task<ActionResult<CommonResult>> CreateUser(CreateClientRequest _request)
+        public async Task<ActionResult<CreateClientResponse>> CreateUser(CreateClientRequest _request)
         {
             Stopwatch timerProcess = Stopwatch.StartNew();
             Logger.Error($"********* NEW REQUEST *********");
