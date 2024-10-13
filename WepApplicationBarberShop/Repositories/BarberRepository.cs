@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Data;
 using System.Data.SqlClient;
+using System.Net.Sockets;
 using WepApplicationBarberShop.Models.DTO.Request;
 using WepApplicationBarberShop.Models.DTO.Response;
 using WepApplicationBarberShop.Repositories.IRepositories;
@@ -42,6 +43,59 @@ namespace WepApplicationBarberShop.Repositories
             {
                 string query = "[dbo].[GetServices]";
                 response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, new List<SqlParameter>());
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+        public async Task<DataTable> GetServicesBarberBD(int idService)
+        {
+            Logger.Information("GET SERVICES BY ID BD");
+            DataTable response = new DataTable();
+            try
+            {
+                string query = "[dbo].[GetServicesById]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@ID", idService)
+                };
+                response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+        public async Task<DataTable> GetCombosBarberBD()
+        {
+            Logger.Information("GET COMBOS BD");
+            DataTable response = new DataTable();
+            try
+            {
+                string query = "[dbo].[GetCombos]";
+                response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, new List<SqlParameter>());
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+        public async Task<DataTable> GetCombosBarberBD(int id)
+        {
+            Logger.Information("GET COMBOS BY ID BD");
+            DataTable response = new DataTable();
+            try
+            {
+                string query = "[dbo].[GetCombosById]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@ID", id)
+                };
+                response = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
             }
             catch (Exception ex)
             {
@@ -447,6 +501,54 @@ namespace WepApplicationBarberShop.Repositories
             }
             return response;
         }
+
+        public async Task<bool> AddRegisterPaymentBD(PaymentRegisterRequest payment)
+        {
+            Logger.Information("[" + payment.trace + "], ADD RESERVATION BD");
+            bool response = false;
+            try
+            {
+                string query = "[dbo].[InsertPayment]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@ID_RESERVATION", payment.idReservation),
+                    new SqlParameter("@ID_CLIENT", payment.idClient),
+                    new SqlParameter("@ID_BARBER", payment.idBarber),
+                    new SqlParameter("@TOTAL", payment.total),
+                    new SqlParameter("@CASH", payment.cash),
+                    new SqlParameter("@CHANGE", payment.change)
+                };
+                Logger.Debug("[" + payment.trace + "], REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
+                var data = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+                int idPayment = 0;
+                if (data.Rows.Count > 0)
+                {
+                    idPayment = Convert.ToInt16(data.Rows[0]["ID_PAYMENT"]);
+                    foreach (var item in payment.detail)
+                    {
+                        query = "[dbo].[InsertPaymentDetail]";
+                        lstParameters = new List<SqlParameter>
+                        {
+                            new SqlParameter("@ID_PAYMENTS", idPayment),
+                            new SqlParameter("@ID_TYPE_SERVICE", item.typeService),
+                            new SqlParameter("@PRICE", item.price),
+                            new SqlParameter("@QTY", item.qty),
+                            new SqlParameter("@DISCOUNT", item.discount),
+                            new SqlParameter("@SUB_TOTAL", item.subTotal)
+                        };
+                        Logger.Debug("[" + payment.trace + "], REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
+                        await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+                    }
+                    response = true;
+                }                    
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + payment.trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+
         public async Task<DataTable> GetAvailableTimesByBarberBD(int barber, string date, string trace)
         {
             Logger.Information("[" + trace + "], GET AVAILABLE TIME BY BARBER BD");
@@ -507,6 +609,70 @@ namespace WepApplicationBarberShop.Repositories
                 Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
             }
             return response;
+        }
+        public async Task<bool> AddServiceBD(string service, string description, string trace)
+        {
+            Logger.Information("[" + trace + "], ADD USER BD");
+            bool response = false;
+            try
+            {
+                string query = "[dbo].[InsertServiceBarber]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@SERVICE", service),
+                    new SqlParameter("@DESCRIPTION", "N'" + description)                    
+                };
+                Logger.Debug("[" + trace + "], REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
+                var data = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+                response = true;
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+        public async Task<bool> AddComboBD(string description, string trace)
+        {
+            Logger.Information("[" + trace + "], ADD COMBO BD");
+            bool response = false;
+            try
+            {
+                string query = "[dbo].[InsertComboService]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@DESCRIPTION", description)
+                };
+                Logger.Debug("[" + trace + "], REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
+                var data = await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);
+                response = true;
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+            }
+            return response;
+        }
+        public async Task<DataTable> FilterBarberByService(string idService, string trace)
+        {
+            Logger.Information("[" + trace + "], FILTER BARBER BY SERVICES BD");            
+            try
+            {
+                string query = "[dbo].[GetRelationServiceBarber]";
+                List<SqlParameter> lstParameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@ID_SERVICE", idService)                    
+                };
+                Logger.Debug("[" + trace + "], REQUEST BD => SP: " + query + ", PARAMETERS: " + JsonConvert.SerializeObject(lstParameters));
+                return await this.dataBase.SelectStoredProcedure("BRB.BD.BARBERSHOP", query, lstParameters);                
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                return new DataTable();
+            }            
         }
     }
 }

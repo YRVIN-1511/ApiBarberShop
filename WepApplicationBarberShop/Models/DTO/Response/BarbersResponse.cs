@@ -41,5 +41,6 @@ namespace WepApplicationBarberShop.Models.DTO.Response
         public int id { get; set; }
         public string state { get; set; } = string.Empty;
         public string alias { get; set; } = string.Empty;
+        public decimal price { get; set; } = 0M;
     }
 }

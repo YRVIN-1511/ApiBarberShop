@@ -6,6 +6,7 @@ using WepApplicationBarberShop.Models.Common;
 using WepApplicationBarberShop.Models.DTO.Request;
 using WepApplicationBarberShop.Models.DTO.Response;
 using WepApplicationBarberShop.Repositories.IRepositories;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace WepApplicationBarberShop.Services.Service
 {
@@ -455,6 +456,23 @@ namespace WepApplicationBarberShop.Services.Service
             }
             return _response;
         }
+        public async Task<CommonResult> addRegisterPayment(PaymentRegisterRequest _request)
+        {
+            CommonResult _response = null;
+            try
+            {
+                Logger.Error($"[" + _request.trace + "], REQUEST Receive [" + JsonConvert.SerializeObject(_request) + "]");
+                var _responseInsert = await _repository.AddRegisterPaymentBD(_request);
+                if (_responseInsert) _response = CommonResult.Ok(); else _response = CommonResult.Error("303", "PAYMENT NOT REGISTER");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + _request.trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = CommonResult.fatal();
+            }
+            return _response;
+        }
+
         public async Task<AvailableTimesBarberResponse> GetAvailableTimesByIdBarber(AvailableTimesBarberRequest _request)
         {
             AvailableTimesBarberResponse _response = null;
@@ -597,7 +615,7 @@ namespace WepApplicationBarberShop.Services.Service
                 {
                     List<serviceBarber> perfils = new ();
                     foreach (DataRow item in responseStatus.Rows)
-                        perfils.Add(new serviceBarber { id = item.Field<int>("ID"), description = item.Field<string>("DESCRIPTION").Trim(), price= item.Field<decimal>("PRICE") });
+                        perfils.Add(new serviceBarber { id = item.Field<int>("ID"), description = item.Field<string>("DESCRIPTION").Trim().Split('|').ToList(), service= item.Field<string>("SERVICE") });
                     _response = ServicesResponse.Ok(perfils);
                 }
                 else
@@ -607,6 +625,153 @@ namespace WepApplicationBarberShop.Services.Service
             {
                 Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
                 _response = ServicesResponse.fatal();
+            }
+            return _response;
+        }
+        public async Task<ServicesResponse> getServices(int idService)
+        {
+            ServicesResponse _response = null;
+            try
+            {
+                Logger.Error($"REQUEST Receive [GET SERVICES BY ID]");
+                var responseStatus = await _repository.GetServicesBarberBD(idService);
+                if (responseStatus.Rows.Count > 0)
+                {
+                    List<serviceBarber> perfils = new();
+                    foreach (DataRow item in responseStatus.Rows)
+                        perfils.Add(new serviceBarber { id = item.Field<int>("ID"), description = item.Field<string>("DESCRIPTION").Trim().Split('|').ToList(), service = item.Field<string>("SERVICE") });
+                    _response = ServicesResponse.Ok(perfils);
+                }
+                else
+                    _response = ServicesResponse.Error("001", "DATA NOT FOUND");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = ServicesResponse.fatal();
+            }
+            return _response;
+        }
+        public async Task<CombosResponse> getCombos()
+        {
+            CombosResponse _response = null;
+            try
+            {
+                Logger.Error($"REQUEST Receive [GET COMBOS]");
+                var responseStatus = await _repository.GetCombosBarberBD();
+                if (responseStatus.Rows.Count > 0)
+                {
+                    List<comboBarber> combos = new();
+                    foreach (DataRow item in responseStatus.Rows)
+                        combos.Add(new comboBarber { id = item.Field<int>("ID"), description = item.Field<string>("DESCRIPTION").Trim() });
+                    _response = CombosResponse.Ok(combos);
+                }
+                else
+                    _response = CombosResponse.Error("001", "DATA NOT FOUND");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = CombosResponse.fatal();
+            }
+            return _response;
+        }
+        public async Task<CombosResponse> getCombos(int idCombo)
+        {
+            CombosResponse _response = null;
+            try
+            {
+                Logger.Error($"REQUEST Receive [GET COMBOS BY ID]");
+                var responseStatus = await _repository.GetCombosBarberBD(idCombo);
+                if (responseStatus.Rows.Count > 0)
+                {
+                    List<comboBarber> combos = new();
+                    foreach (DataRow item in responseStatus.Rows)
+                        combos.Add(new comboBarber { id = item.Field<int>("ID"), description = item.Field<string>("DESCRIPTION").Trim() });
+                    _response = CombosResponse.Ok(combos);
+                }
+                else
+                    _response = CombosResponse.Error("001", "DATA NOT FOUND");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = CombosResponse.fatal();
+            }
+            return _response;
+        }
+        public async Task<CommonResult> addServiceBarber(ServiceCreateRequest _request)
+        {
+            CommonResult _response = null;
+            try
+            {
+                Logger.Error($"[" + _request.trace + "], REQUEST Receive [" + JsonConvert.SerializeObject(_request) + "]");
+                var _responseInsert = await _repository.AddServiceBD(_request.service,_request.description, _request.trace);                
+                if (_responseInsert) _response = CommonResult.Ok(); else _response = CommonResult.Error("303", "SERVICE NOT REGISTER");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + _request.trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = CommonResult.fatal();
+            }
+            return _response;
+        }
+        public async Task<CommonResult> addComboBarber(ComboCreateRequest _request)
+        {
+            CommonResult _response = null;
+            try
+            {
+                Logger.Error($"[" + _request.trace + "], REQUEST Receive [" + JsonConvert.SerializeObject(_request) + "]");
+                var _responseInsert = await _repository.AddComboBD(_request.description, _request.trace);
+                if (_responseInsert) _response = CommonResult.Ok(); else _response = CommonResult.Error("303", "COMBO NOT REGISTER");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + _request.trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = CommonResult.fatal();
+            }
+            return _response;
+        }
+        public async Task<filterBarbersByServicesResponse> filterBarbersByService(FilterBarberByService _request)
+        {
+            filterBarbersByServicesResponse _response;
+            try
+            {
+                List<ServicesAvailables> aux_services = new();
+                Logger.Error($"[" + _request.trace + "], REQUEST Receive [" + JsonConvert.SerializeObject(_request) + "]");
+                foreach (var item in _request.idServices)
+                {
+                    ServicesAvailables _services = new();
+                    _services.idService = item;
+                    var _resp = await _repository.FilterBarberByService(item, _request.trace);
+                    if (_resp.Rows.Count > 0)
+                    {
+                        _services.available = true;
+                        foreach (DataRow row in _resp.Rows)
+                        {
+                            _services.barbers.Add(new Barber
+                            {
+                                id = row.Field<int>("ID"),
+                                lastName = row.Field<string>("LAST_NAME").Trim(),
+                                motherLastName = row.Field<string>("MOTHER_LAST_NAME").Trim(),
+                                names = row.Field<string>("NAMES").Trim(),
+                                image = row.Field<string>("IMAGES") ?? string.Empty,
+                                alias = row.Field<string>("ALIAS").Trim(),
+                                price = row.Field<decimal>("PRICE")
+                            });                            
+                        }
+                    }
+                    aux_services.Add(_services);
+                }
+                if (aux_services.Count(s => s.available == true)>0)                    
+                    _response = filterBarbersByServicesResponse.Ok(aux_services);
+                else
+                    _response = filterBarbersByServicesResponse.Error("002","NOT BARBERS AVAILABLES");                
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[" + _request.trace + "], ERROR: " + ex.Message + ", STACK:" + ex.StackTrace);
+                _response = filterBarbersByServicesResponse.fatal();
             }
             return _response;
         }

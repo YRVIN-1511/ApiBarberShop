@@ -34,8 +34,8 @@ namespace WepApplicationBarberShop.Models.DTO.Response
     public class serviceBarber
     {
         public int id { get; set; } = 0;
-        public string description { get; set; } = string.Empty;
-        public decimal price { get; set; } = 0M;
+        public string service { get; set; } = string.Empty;
+        public List<string> description { get; set; } = new ();
     }
 }
 
